@@ -28,8 +28,7 @@ yaml_config = '''
 rosbridge_ip: 192.168.1.31
 rosbridge_port: 9090
 # Topics being published in the robot to expose locally
-remote_topics: [
-                    ['/joint_states', 'sensor_msgs/JointState'], 
+remote_topics: [ ['/joint_states', 'sensor_msgs/JointState'], 
                     ['/tf', 'tf2_msgs/TFMessage'],
                     ['/scan', 'sensor_msgs/LaserScan']
                     ]
@@ -86,10 +85,13 @@ class ROSduct(object):
 
         self.initialize()
 
+    def bridge_connect(self):
+
     def initialize(self):
         """
         Initialize creating all necessary bridged clients and servers.
         """
+
         connected = False
         while not rospy.is_shutdown() and not connected:
             try:
@@ -230,7 +232,8 @@ class ROSduct(object):
                            topic_type + ' got data: ' + str(message) +
                            ' which is republished remotely.')
             dict_msg = from_ROS_to_dict(message)
-            bridgepub.publish(dict_msg)
+            if not self.client.terminated:
+                bridgepub.publish(dict_msg)
         return callback_local_to_remote
 
     def create_subscribe_listener(self,
@@ -384,6 +387,10 @@ class ROSduct(object):
         """
         r = rospy.Rate(self.rate_hz)
         while not rospy.is_shutdown():
+            if self.client.terminated: # we've lost the connection
+                rospy.logwarn("Disconnected from server, attempting reconnect...")
+                self.client.reconnect()
+                #self.initialize()
             self.sync_params()
             r.sleep()
 

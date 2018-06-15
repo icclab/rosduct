@@ -3,6 +3,7 @@ call services, create service server and use action client.
 """
 
 import threading
+import socket
 import time
 import json
 import uuid
@@ -28,7 +29,8 @@ class ROSBridgeClient(WebSocketClient):
             port (int, optional): The WebSocket port number for rosbridge.
                 Defaults to 9090.
         """
-        WebSocketClient.__init__(self, 'ws://{}:{}'.format(ip, port))
+        self.urlstring = 'ws://{}:{}'.format(ip, port)
+        WebSocketClient.__init__(self, self.urlstring)
         self._connected = False
         self._id_counter = 0
         self._publishers = {}
@@ -36,8 +38,21 @@ class ROSBridgeClient(WebSocketClient):
         self._service_clients = {}
         self._service_servers = {}
         self._action_clients = {}
+
         self.connect()
-        threading.Thread(target=self.run_forever).start()
+        self.client_thread = threading.Thread(target=self.run_forever)
+        self.client_thread.start()
+        while not self._connected:
+            time.sleep(0.1)
+
+
+
+    def reconnect(self):
+        WebSocketClient.__init__(self, self.urlstring)
+        self._connected = False
+        self.connect()
+        self.client_thread = threading.Thread(target=self.run_forever)
+        self.client_thread.start()
         while not self._connected:
             time.sleep(0.1)
 
@@ -434,7 +449,7 @@ class ROSBridgeClient(WebSocketClient):
             code (int): A status code.
             reason (str, opitonal): A human readable message. Defaults to None.
         """
-        print('Disconnected with rosbridge')
+        print('Disconnected with rosbridge: {}, {}'.format(code, reason))
 
     def received_message(self, message):
         """Called when message received from ROS server.
@@ -482,6 +497,7 @@ class ROSBridgeClient(WebSocketClient):
         print(error)
 
     def __del__(self):
+        print('del called')
         for publisher in self._publishers:
             self._publishers[publisher].unregister()
         for subscriber in self._subscribers:
