@@ -85,8 +85,6 @@ class ROSduct(object):
 
         self.initialize()
 
-    def bridge_connect(self):
-
     def initialize(self):
         """
         Initialize creating all necessary bridged clients and servers.
@@ -388,8 +386,10 @@ class ROSduct(object):
         r = rospy.Rate(self.rate_hz)
         while not rospy.is_shutdown():
             if self.client.terminated: # we've lost the connection
-                rospy.logwarn("Disconnected from server, attempting reconnect...")
-                self.client.reconnect()
+                rospy.logerr("Unexpected disconnect from server, shutting down...")
+                rospy.signal_shutdown("We've lost the connection!")
+                #del self.client # will this remove all the pub/sub objects?
+                #self.client.reconnect()
                 #self.initialize()
             self.sync_params()
             r.sleep()

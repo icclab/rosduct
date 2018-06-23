@@ -45,8 +45,6 @@ class ROSBridgeClient(WebSocketClient):
         while not self._connected:
             time.sleep(0.1)
 
-
-
     def reconnect(self):
         WebSocketClient.__init__(self, self.urlstring)
         self._connected = False
