@@ -64,21 +64,21 @@ class ROSduct(object):
         # Topics
         # TODO: check if topic types are installed, if not, give a warning
         self.remote_topics = rospy.get_param('~remote_topics', [])
-        rospy.loginfo("Remote topics: " + str(self.remote_topics))
+        #rospy.loginfo("Remote topics: " + str(self.remote_topics))
         self.local_topics = rospy.get_param('~local_topics', [])
-        rospy.loginfo("Local topics: " + str(self.local_topics))
+        #rospy.loginfo("Local topics: " + str(self.local_topics))
 
         # Services
         # TODO: check if service types are installed
         self.remote_services = rospy.get_param('~remote_services', [])
-        rospy.loginfo("Remote services: " + str(self.remote_services))
+        #rospy.loginfo("Remote services: " + str(self.remote_services))
         self.local_services = rospy.get_param('~local_services', [])
-        rospy.loginfo("Local services: " + str(self.local_services))
+        #rospy.loginfo("Local services: " + str(self.local_services))
 
         # Parameters
         self.rate_hz = rospy.get_param('~parameter_polling_hz', 1)
         self.parameters = rospy.get_param('~parameters', [])
-        rospy.loginfo("Parameters: " + str(self.parameters))
+        #rospy.loginfo("Parameters: " + str(self.parameters))
         self.last_params = {}
 
         self.check_if_msgs_are_installed()
