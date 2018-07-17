@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="rosduct" name="rosduct" type="rosduct_main.py" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/my.yaml" />
+  </node>
+</launch>
