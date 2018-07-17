@@ -2,8 +2,8 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2018-07-17)
+------------------
 * adopted for release
 * Extending README with docker use case
 * Add note about rosout
