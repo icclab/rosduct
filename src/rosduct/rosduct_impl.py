@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
+from std_msgs.msg import String
+from rosduct.srv import ROSDuctConnection, ROSDuctConnectionResponse
 from conversions import from_dict_to_JSON
 from conversions import from_JSON_to_dict
 from conversions import from_dict_to_ROS
@@ -84,6 +86,10 @@ class ROSduct(object):
         self.check_if_msgs_are_installed()
 
         self.initialize()
+        self.expose_local_topic = rospy.Service('~expose_local_topic', ROSDuctConnection, self.add_local_topic)
+        self.expose_local_service = rospy.Service('~expose_local_service', ROSDuctConnection, self.add_local_service)
+        self.expose_remote_topic = rospy.Service('~expose_remote_topic', ROSDuctConnection, self.add_remote_topic)
+        self.expose_remote_service = rospy.Service('~expose_remote_service', ROSDuctConnection, self.add_remote_topic)
 
     def initialize(self):
         """
@@ -111,23 +117,12 @@ class ROSduct(object):
                 local_name = topic_name
             elif len(r_t) == 3:
                 topic_name, topic_type, local_name = r_t
-            rospub = rospy.Publisher(local_name,
-                                     get_ROS_class(topic_type),
-                                     # SubscribeListener added later
-                                     queue_size=1)
 
-            cb_r_to_l = self.create_callback_from_remote_to_local(topic_name,
-                                                                  topic_type,
-                                                                  rospub)
-            subl = self.create_subscribe_listener(topic_name,
-                                                  topic_type,
-                                                  cb_r_to_l)
-            rospub.impl.add_subscriber_listener(subl)
-            self._instances['topics'].append(
-                {topic_name:
-                 {'rospub': rospub,
-                  'bridgesub': None}
-                 })
+            msg = ROSDuctConnection()
+            msg.conn_name = String(topic_name)
+            msg.conn_type = String(topic_type)
+            msg.alias_name = String(local_name)
+            self.add_remote_topic(msg)
 
         for l_t in self.local_topics:
             if len(l_t) == 2:
@@ -136,20 +131,11 @@ class ROSduct(object):
             elif len(l_t) == 3:
                 topic_name, topic_type, remote_name = l_t
 
-            bridgepub = self.client.publisher(remote_name, topic_type)
-
-            cb_l_to_r = self.create_callback_from_local_to_remote(topic_name,
-                                                                  topic_type,
-                                                                  bridgepub)
-
-            rossub = rospy.Subscriber(topic_name,
-                                      get_ROS_class(topic_type),
-                                      cb_l_to_r)
-            self._instances['topics'].append(
-                {topic_name:
-                 {'rossub': rossub,
-                  'bridgepub': bridgepub}
-                 })
+            msg = ROSDuctConnection()
+            msg.conn_name = String(topic_name)
+            msg.conn_type = String(topic_type)
+            msg.alias_name = String(remote_name)
+            self.add_local_topic(msg)
 
         # Services
         for r_s in self.remote_services:
@@ -158,22 +144,12 @@ class ROSduct(object):
                 local_name = service_name
             elif len(r_s) == 3:
                 service_name, service_type, local_name = r_s
-            remote_service_client = self.client.service_client(service_name,
-                                                               service_type)
-            r_to_l_serv_cb = self.create_callback_from_remote_to_local_srv(
-                remote_service_client,
-                service_name,
-                service_type)
-            rosserv = rospy.Service(local_name,
-                                    get_ROS_class(service_type,
-                                                  srv=True),
-                                    r_to_l_serv_cb)
 
-            self._instances['services'].append(
-                {service_name:
-                 {'rosserv': rosserv,
-                  'bridgeservclient': remote_service_client}
-                 })
+            msg = ROSDuctConnection()
+            msg.conn_name = String(service_name)
+            msg.conn_type = String(service_type)
+            msg.alias_name = String(local_name)
+            self.add_remote_service(msg)
 
         for l_s in self.local_services:
             if len(l_s) == 2:
@@ -181,21 +157,13 @@ class ROSduct(object):
                 remote_name = service_name
             elif len(l_s) == 3:
                 service_name, service_type, remote_name = l_s
-            rosservprox = rospy.ServiceProxy(service_name,
-                                             get_ROS_class(service_type,
-                                                           srv=True))
-            l_to_r_srv_cv = self.create_callback_from_local_to_remote_srv(
-                service_name,
-                service_type,
-                rosservprox)
-            remote_service_server = self.client.service_server(remote_name,
-                                                               service_type,
-                                                               l_to_r_srv_cv)
-            self._instances['services'].append(
-                {service_name:
-                 {'rosservprox': rosservprox,
-                  'bridgeservserver': remote_service_server}
-                 })
+
+            msg = ROSDuctConnection()
+            msg.conn_name = String(service_name)
+            msg.conn_type = String(service_type)
+            msg.alias_name = String(remote_name)
+            self.add_local_service(msg)
+
 
         # Get all params and store them for further updates
         for param in self.parameters:
@@ -203,6 +171,80 @@ class ROSduct(object):
                 # remote param name is the first one
                 param = param[0]
             self.last_params[param] = self.client.get_param(param)
+
+    def add_local_topic(self, msg):
+        bridgepub = self.client.publisher(msg.alias_name.data, msg.conn_type.data)
+
+        cb_l_to_r = self.create_callback_from_local_to_remote(msg.conn_name.data,
+                                                              msg.conn_type.data,
+                                                              bridgepub)
+
+        rossub = rospy.Subscriber(msg.conn_name.data,
+                                  get_ROS_class(msg.conn_type.data),
+                                  cb_l_to_r)
+        self._instances['topics'].append(
+            {msg.conn_name.data:
+             {'rossub': rossub,
+              'bridgepub': bridgepub}
+             })
+        return ROSDuctConnectionResponse()
+
+    def add_remote_topic(self, msg):
+        rospub = rospy.Publisher(msg.alias_name.data,
+                                 get_ROS_class(msg.conn_type.data),
+                                 # SubscribeListener added later
+                                 queue_size=1)
+
+        cb_r_to_l = self.create_callback_from_remote_to_local(msg.conn_name.data,
+                                                              msg.conn_type.data,
+                                                              rospub)
+        subl = self.create_subscribe_listener(msg.conn_name.data,
+                                              msg.conn_type.data,
+                                              cb_r_to_l)
+        rospub.impl.add_subscriber_listener(subl)
+        self._instances['topics'].append(
+            {msg.conn_name.data:
+             {'rospub': rospub,
+              'bridgesub': None}
+             })
+        return ROSDuctConnectionResponse()
+
+    def add_local_service(self, msg):
+        rosservprox = rospy.ServiceProxy(msg.conn_name.data,
+                                         get_ROS_class(msg.conn_type.data,
+                                                       srv=True))
+        l_to_r_srv_cv = self.create_callback_from_local_to_remote_srv(
+            msg.conn_name.data,
+            msg.conn_type.data,
+            rosservprox)
+        remote_service_server = self.client.service_server(msg.alias_name.data,
+                                                           msg.conn_type.data,
+                                                           l_to_r_srv_cv)
+        self._instances['services'].append(
+            {msg.conn_name.data:
+             {'rosservprox': rosservprox,
+              'bridgeservserver': remote_service_server}
+             })
+        return ROSDuctConnectionResponse()
+
+    def add_remote_service(self, msg):
+        remote_service_client = self.client.service_client(msg.conn_name.data,
+                                                           msg.conn_type.data)
+        r_to_l_serv_cb = self.create_callback_from_remote_to_local_srv(
+            remote_service_client,
+            msg.conn_name.data,
+            msg.conn_type.data)
+        rosserv = rospy.Service(msg.alias_name.data,
+                                get_ROS_class(msg.conn_type.data,
+                                              srv=True),
+                                r_to_l_serv_cb)
+
+        self._instances['services'].append(
+            {msg.conn_name.data:
+             {'rosserv': rosserv,
+              'bridgeservclient': remote_service_client}
+             })
+        return ROSDuctConnectionResponse()
 
     def create_callback_from_remote_to_local(self, topic_name,
                                              topic_type,

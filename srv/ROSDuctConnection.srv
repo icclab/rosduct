@@ -1,0 +1,4 @@
+std_msgs/String conn_name
+std_msgs/String conn_type
+std_msgs/String alias_name
+---
