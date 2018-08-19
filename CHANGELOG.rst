@@ -2,6 +2,12 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* latch remote topics
+* latch remote topics
+* Contributors: Marc Hanheide
+
 0.0.1 (2018-07-17)
 ------------------
 * adopted for release
