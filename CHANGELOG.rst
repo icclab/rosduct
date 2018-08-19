@@ -2,8 +2,8 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2018-08-19)
+------------------
 * latching was a stupid idea
 * Contributors: Marc Hanheide
 
