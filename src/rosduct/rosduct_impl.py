@@ -113,7 +113,6 @@ class ROSduct(object):
                 topic_name, topic_type, local_name = r_t
             rospub = rospy.Publisher(local_name,
                                      get_ROS_class(topic_type),
-                                     latch=True,
                                      # SubscribeListener added later
                                      queue_size=1)
 
