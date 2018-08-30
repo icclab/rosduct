@@ -114,6 +114,10 @@ def from_dict_to_ROS(dict_msg, ros_message_type, srv=False):
     if len(dict_msg) == 1:
         dict_msg = [dict_msg]
     fill_message_args(msg_instance, dict_msg)
+    # mfc: if msg contains a frame_id with an unicode frame_id we will have an exception...
+    if hasattr(msg_instance, 'header'):
+        msg_instance.header.frame_id = msg_instance.header.frame_id.encode("ascii")
+    
     return msg_instance
 
 
