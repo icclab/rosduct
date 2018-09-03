@@ -2,8 +2,8 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2018-09-03)
+------------------
 * Merge pull request `#2 <https://github.com/LCAS/rosduct/issues/2>`_ from MFernandezCarmona/master
   Update package.xml
 * reintroduced pydispatcher
