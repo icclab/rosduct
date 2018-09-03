@@ -2,6 +2,21 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#2 <https://github.com/LCAS/rosduct/issues/2>`_ from MFernandezCarmona/master
+  Update package.xml
+* reintroduced pydispatcher
+* remove pydispatch
+  the problem is we need `pip install pydispatcher`, not `pydispatch` . So for now we remove this dependency until we have a deb package for this python package
+* Caching Service exceptions...
+* Update conversions.py
+* Update package.xml
+  These should solve the following errors I had runing rosduct:
+  ImportError: No module named ws4py.client.threadedclient
+  ImportError: No module named pydispatch
+* Contributors: Manuel Fernandez-Carmona, Marc Hanheide
+
 0.0.3 (2018-08-19)
 ------------------
 * latching was a stupid idea
