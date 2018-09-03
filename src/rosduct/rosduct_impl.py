@@ -313,10 +313,17 @@ class ROSduct(object):
                                        srv=True)
             rospy.loginfo("Waiting for server " + service_name + "...")
             rospy.wait_for_service(service_name)
-            # TODO: error handling in services...
-            resp = rosservprox.call(ros_req)
-            resp_dict = from_ROS_to_dict(resp)
-            return True, resp_dict
+            # TODO: error handling in services...                    
+            try:
+                resp = rosservprox.call(ros_req)
+                resp_dict = from_ROS_to_dict(resp)
+                return_val=True
+            except rospy.ServiceException as exc:
+                resp_dict = dict()
+                return_val=False
+                rospy.logerr("Service did not process request: " + str(exc))
+
+            return return_val, resp_dict
 
         return callback_from_remote_service_call
 
