@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String
 from rosduct.srv import ROSDuctConnection, ROSDuctConnectionResponse
 from conversions import from_dict_to_JSON
 from conversions import from_JSON_to_dict
@@ -87,9 +86,13 @@ class ROSduct(object):
 
         self.initialize()
         self.expose_local_topic = rospy.Service('~expose_local_topic', ROSDuctConnection, self.add_local_topic)
+        self.close_local_topic = rospy.Service('~close_local_topic', ROSDuctConnection, self.remove_local_topic)
         self.expose_local_service = rospy.Service('~expose_local_service', ROSDuctConnection, self.add_local_service)
+        self.close_local_service = rospy.Service('~close_local_service', ROSDuctConnection, self.remove_local_service)
         self.expose_remote_topic = rospy.Service('~expose_remote_topic', ROSDuctConnection, self.add_remote_topic)
-        self.expose_remote_service = rospy.Service('~expose_remote_service', ROSDuctConnection, self.add_remote_topic)
+        self.close_remote_topic = rospy.Service('~close_remote_topic', ROSDuctConnection, self.remove_remote_topic)
+        self.expose_remote_service = rospy.Service('~expose_remote_service', ROSDuctConnection, self.add_remote_service)
+        self.close_remote_service = rospy.Service('~close_remote_service', ROSDuctConnection, self.remove_remote_service)
 
     def initialize(self):
         """
@@ -119,9 +122,9 @@ class ROSduct(object):
                 topic_name, topic_type, local_name = r_t
 
             msg = ROSDuctConnection()
-            msg.conn_name = String(topic_name)
-            msg.conn_type = String(topic_type)
-            msg.alias_name = String(local_name)
+            msg.conn_name = topic_name
+            msg.conn_type = topic_type
+            msg.alias_name = local_name
             self.add_remote_topic(msg)
 
         for l_t in self.local_topics:
@@ -132,9 +135,9 @@ class ROSduct(object):
                 topic_name, topic_type, remote_name = l_t
 
             msg = ROSDuctConnection()
-            msg.conn_name = String(topic_name)
-            msg.conn_type = String(topic_type)
-            msg.alias_name = String(remote_name)
+            msg.conn_name = topic_name
+            msg.conn_type = topic_type
+            msg.alias_name = remote_name
             self.add_local_topic(msg)
 
         # Services
@@ -146,9 +149,9 @@ class ROSduct(object):
                 service_name, service_type, local_name = r_s
 
             msg = ROSDuctConnection()
-            msg.conn_name = String(service_name)
-            msg.conn_type = String(service_type)
-            msg.alias_name = String(local_name)
+            msg.conn_name = service_name
+            msg.conn_type = service_type
+            msg.alias_name = local_name
             self.add_remote_service(msg)
 
         for l_s in self.local_services:
@@ -159,9 +162,9 @@ class ROSduct(object):
                 service_name, service_type, remote_name = l_s
 
             msg = ROSDuctConnection()
-            msg.conn_name = String(service_name)
-            msg.conn_type = String(service_type)
-            msg.alias_name = String(remote_name)
+            msg.conn_name = service_name
+            msg.conn_type = service_type
+            msg.alias_name = remote_name
             self.add_local_service(msg)
 
 
@@ -173,77 +176,114 @@ class ROSduct(object):
             self.last_params[param] = self.client.get_param(param)
 
     def add_local_topic(self, msg):
-        bridgepub = self.client.publisher(msg.alias_name.data, msg.conn_type.data)
+        bridgepub = self.client.publisher(msg.alias_name,
+                                          msg.conn_type,
+                                          latch=msg.latch)
 
-        cb_l_to_r = self.create_callback_from_local_to_remote(msg.conn_name.data,
-                                                              msg.conn_type.data,
+        cb_l_to_r = self.create_callback_from_local_to_remote(msg.conn_name,
+                                                              msg.conn_type,
                                                               bridgepub)
 
-        rossub = rospy.Subscriber(msg.conn_name.data,
-                                  get_ROS_class(msg.conn_type.data),
+        rossub = rospy.Subscriber(msg.conn_name,
+                                  get_ROS_class(msg.conn_type),
                                   cb_l_to_r)
         self._instances['topics'].append(
-            {msg.conn_name.data:
+            {msg.conn_name:
              {'rossub': rossub,
               'bridgepub': bridgepub}
              })
         return ROSDuctConnectionResponse()
 
-    def add_remote_topic(self, msg):
-        rospub = rospy.Publisher(msg.alias_name.data,
-                                 get_ROS_class(msg.conn_type.data),
-                                 # SubscribeListener added later
-                                 queue_size=1)
+    def remove_local_topic(self, msg):
+        for i, topic in enumerate(self._instances['topics']):
+            if msg.conn_name in topic:
+                topic[msg.conn_name]['rossub'].unregister()
+                topic[msg.conn_name]['bridgepub'].unregister()
+                del self._instances['topics'][i]
+                break
+        return ROSDuctConnectionResponse()
 
-        cb_r_to_l = self.create_callback_from_remote_to_local(msg.conn_name.data,
-                                                              msg.conn_type.data,
+    def add_remote_topic(self, msg):
+        rospub = rospy.Publisher(msg.alias_name,
+                                 get_ROS_class(msg.conn_type),
+                                 # SubscribeListener added later
+                                 queue_size=1,
+                                 latch=msg.latch)
+
+        cb_r_to_l = self.create_callback_from_remote_to_local(msg.conn_name,
+                                                              msg.conn_type,
                                                               rospub)
-        subl = self.create_subscribe_listener(msg.conn_name.data,
-                                              msg.conn_type.data,
+        subl = self.create_subscribe_listener(msg.conn_name,
+                                              msg.conn_type,
                                               cb_r_to_l)
         rospub.impl.add_subscriber_listener(subl)
         self._instances['topics'].append(
-            {msg.conn_name.data:
+            {msg.conn_name:
              {'rospub': rospub,
               'bridgesub': None}
              })
         return ROSDuctConnectionResponse()
 
+    def remove_remote_topic(self, msg):
+        for i, topic in enumerate(self._instances['topics']):
+            if msg.conn_name in topic:
+                topic[msg.conn_name]['rospub'].unregister()
+                del self._instances['topics'][i]
+                break
+        return ROSDuctConnectionResponse()
+
     def add_local_service(self, msg):
-        rosservprox = rospy.ServiceProxy(msg.conn_name.data,
-                                         get_ROS_class(msg.conn_type.data,
+        rosservprox = rospy.ServiceProxy(msg.conn_name,
+                                         get_ROS_class(msg.conn_type,
                                                        srv=True))
         l_to_r_srv_cv = self.create_callback_from_local_to_remote_srv(
-            msg.conn_name.data,
-            msg.conn_type.data,
+            msg.conn_name,
+            msg.conn_type,
             rosservprox)
-        remote_service_server = self.client.service_server(msg.alias_name.data,
-                                                           msg.conn_type.data,
+        remote_service_server = self.client.service_server(msg.alias_name,
+                                                           msg.conn_type,
                                                            l_to_r_srv_cv)
         self._instances['services'].append(
-            {msg.conn_name.data:
+            {msg.conn_name:
              {'rosservprox': rosservprox,
               'bridgeservserver': remote_service_server}
              })
         return ROSDuctConnectionResponse()
 
+    def remove_local_service(self, msg):
+        for i, service in enumerate(self._instances['services']):
+            if msg.conn_name in service:
+                service[msg.conn_name]['rosservprox'].unregister()
+                service[msg.conn_name]['bridgeservserver'].unregister()
+                del self._instances['services'][i]
+                break
+        return ROSDuctConnectionResponse()
+
     def add_remote_service(self, msg):
-        remote_service_client = self.client.service_client(msg.conn_name.data,
-                                                           msg.conn_type.data)
+        remote_service_client = self.client.service_client(msg.conn_name,
+                                                           msg.conn_type)
         r_to_l_serv_cb = self.create_callback_from_remote_to_local_srv(
             remote_service_client,
-            msg.conn_name.data,
-            msg.conn_type.data)
-        rosserv = rospy.Service(msg.alias_name.data,
-                                get_ROS_class(msg.conn_type.data,
+            msg.conn_name,
+            msg.conn_type)
+        rosserv = rospy.Service(msg.alias_name,
+                                get_ROS_class(msg.conn_type,
                                               srv=True),
                                 r_to_l_serv_cb)
 
         self._instances['services'].append(
-            {msg.conn_name.data:
+            {msg.conn_name:
              {'rosserv': rosserv,
               'bridgeservclient': remote_service_client}
              })
+        return ROSDuctConnectionResponse()
+
+    def remove_remote_service(self, msg):
+        for i, service in enumerate(self._instances['services']):
+            if msg.conn_name in service:
+                service[msg.conn_name]['bridgeservserver'].unregister()
+                del self._instances['services'][i]
+                break
         return ROSDuctConnectionResponse()
 
     def create_callback_from_remote_to_local(self, topic_name,
