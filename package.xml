@@ -11,7 +11,7 @@
   <license>BSD</license>
 
   <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend>
+  <run_depend>message_runtime</run_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>rospy</build_depend>
