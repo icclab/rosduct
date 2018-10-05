@@ -1,0 +1,5 @@
+string conn_name
+string conn_type
+string alias_name
+bool latch
+---
