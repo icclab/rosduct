@@ -2,8 +2,8 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.5 (2018-10-05)
+------------------
 * removed cuplicate dep
 * removed cuplicate dep
 * removed cuplicate dep
