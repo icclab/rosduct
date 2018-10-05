@@ -2,6 +2,21 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* removed cuplicate dep
+* removed cuplicate dep
+* removed cuplicate dep
+* Merge branch 'cwbollinger-master'
+* Merge branch 'master' of https://github.com/cwbollinger/rosduct into cwbollinger-master
+* Added services to remove topic/service from bridge
+* Added services to dynamically expose topic/service
+* Commented out over-verbose logging
+* Exit rosduct when connection is broken.
+  Can't seem to recover afterwards, so might as well exit
+* Experiments to enable reconnections
+* Contributors: Chris Bollinger, Marc Hanheide, christopheriksen
+
 0.0.4 (2018-09-03)
 ------------------
 * Merge pull request `#2 <https://github.com/LCAS/rosduct/issues/2>`_ from MFernandezCarmona/master
