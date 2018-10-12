@@ -29,7 +29,7 @@ yaml_config = '''
 rosbridge_ip: 192.168.1.31
 rosbridge_port: 9090
 # Topics being published in the robot to expose locally
-remote_topics: [ ['/joint_states', 'sensor_msgs/JointState'], 
+remote_topics: [ ['/joint_states', 'sensor_msgs/JointState'],
                     ['/tf', 'tf2_msgs/TFMessage'],
                     ['/scan', 'sensor_msgs/LaserScan']
                     ]
@@ -118,26 +118,36 @@ class ROSduct(object):
             if len(r_t) == 2:
                 topic_name, topic_type = r_t
                 local_name = topic_name
+                latch = False
             elif len(r_t) == 3:
                 topic_name, topic_type, local_name = r_t
+                latch = False
+            elif len(r_t) == 4:
+                topic_name, topic_type, local_name, latch = r_t
 
             msg = ROSDuctConnection()
             msg.conn_name = topic_name
             msg.conn_type = topic_type
             msg.alias_name = local_name
+            msg.latch = latch if latch.__class__==bool else latch.lower() == 'true'
             self.add_remote_topic(msg)
 
         for l_t in self.local_topics:
             if len(l_t) == 2:
                 topic_name, topic_type = l_t
                 remote_name = topic_name
+                latch = False
             elif len(l_t) == 3:
                 topic_name, topic_type, remote_name = l_t
+                latch = False
+            elif len(l_t) == 4:
+                topic_name, topic_type, remote_name, latch = l_t
 
             msg = ROSDuctConnection()
             msg.conn_name = topic_name
             msg.conn_type = topic_type
             msg.alias_name = remote_name
+            msg.latch = latch if latch.__class__==bool else latch.lower() == 'true'
             self.add_local_topic(msg)
 
         # Services
@@ -396,7 +406,7 @@ class ROSduct(object):
                                        srv=True)
             rospy.loginfo("Waiting for server " + service_name + "...")
             rospy.wait_for_service(service_name)
-            # TODO: error handling in services...                    
+            # TODO: error handling in services...
             try:
                 resp = rosservprox.call(ros_req)
                 resp_dict = from_ROS_to_dict(resp)
@@ -415,37 +425,33 @@ class ROSduct(object):
         Check if the provided message types are installed.
         """
         for rt in self.remote_topics:
-            if len(rt) == 2:
-                _, topic_type = rt
-            elif len(rt) == 3:
-                _, topic_type, _ = rt
+            if len(rt) >= 2:
+                topic_type = rt[1]
+
             if not is_ros_message_installed(topic_type):
                 rospy.logwarn(
                     "{} could not be found in the system.".format(topic_type))
 
         for lt in self.local_topics:
-            if len(lt) == 2:
-                _, topic_type = lt
-            elif len(lt) == 3:
-                _, topic_type, _ = lt
+            if len(lt) >= 2:
+                topic_type = lt[1]
+
             if not is_ros_message_installed(topic_type):
                 rospy.logwarn(
                     "{} could not be found in the system.".format(topic_type))
 
         for rs in self.remote_services:
-            if len(rs) == 2:
-                _, service_type = rs
-            elif len(rs) == 3:
-                _, service_type, _ = rs
+            if len(rs) >= 2:
+                service_type = rs[1]
+
             if not is_ros_service_installed(service_type):
                 rospy.logwarn(
                     "{} could not be found in the system.".format(service_type))
 
         for ls in self.local_services:
-            if len(ls) == 2:
-                _, service_type = ls
-            elif len(ls) == 3:
-                _, service_type, _ = ls
+            if len(ls) >= 2:
+                service_type = ls[1]
+
             if not is_ros_service_installed(service_type):
                 rospy.logwarn(
                     "{} could not be found in the system.".format(service_type))
