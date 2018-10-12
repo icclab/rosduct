@@ -2,8 +2,8 @@
 Changelog for package rosduct
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.6 (2018-10-12)
+------------------
 * Fix: ROSDuctConnection() object's latch attribute not set (`#5 <https://github.com/LCAS/rosduct/issues/5>`_)
   * Fix for missing latch for local and remote topics - in ROSDuctConnection objects
   Setting the default value of msg.latch for local and remote topics to `False`
