@@ -29,7 +29,7 @@ class ROSBridgeClient(WebSocketClient):
             port (int, optional): The WebSocket port number for rosbridge.
                 Defaults to 9090.
         """
-        self.urlstring = 'ws://{}:{}'.format(ip, port)
+        self.urlstring = 'wss://{}:{}'.format(ip, port)
         WebSocketClient.__init__(self, self.urlstring)
         self._connected = False
         self._id_counter = 0

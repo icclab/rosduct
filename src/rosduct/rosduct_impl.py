@@ -1,5 +1,6 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
+import sys
+sys.path.append('/home/ros/catkin_ws/src/rosduct/src/rosduct')
 import rospy
 from rosduct.srv import ROSDuctConnection, ROSDuctConnectionResponse
 from conversions import from_dict_to_JSON
@@ -59,7 +60,7 @@ class ROSduct(object):
             rospy.logerr('No rosbridge_ip given.')
             raise Exception('No rosbridge_ip given.')
         self.rosbridge_port = rospy.get_param('~rosbridge_port', 9090)
-        rospy.loginfo("Will connect to ROSBridge websocket: ws://{}:{}".format(
+        rospy.loginfo("Will connect to ROSBridge websocket: wss://{}:{}".format(
             self.rosbridge_ip, self.rosbridge_port))
 
         # Topics
