@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -m
 import sys
 import signal
-from rosapi.srv import Topics
+from rosapi.srv import Topics, Publishers
 import rospy
 from rosduct.srv import ROSDuctConnection, ROSDuctConnectionResponse
 from .conversions import from_dict_to_JSON
@@ -327,7 +327,7 @@ class ROSduct(object):
                            topic_type + ' got data: ' + str(message) +
                            ' which is republished remotely.')
             dict_msg = from_ROS_to_dict(message)
-            if not self.client.terminated:
+            if not self.client.terminated:                
                 bridgepub.publish(dict_msg)
         return callback_local_to_remote
 
@@ -496,12 +496,16 @@ class ROSduct(object):
 
     def get_all_local_topics(self):        
         api_client = rospy.ServiceProxy('/rosapi/topics', Topics)
+        publishers_client = rospy.ServiceProxy('/rosapi/publishers', Publishers)
         result = api_client()
                
         topic_descriptors = []
         for i in range(0, len(result.topics)):
-            if(result.topics[i] != "/rosout"):
-                topic_descriptors.append([result.topics[i], result.types[i]])
+            if(result.topics[i] not in ["/rosout", "/clock"]):
+                # check if topic has at least one local publisher
+                pub_res = publishers_client(result.topics[i])
+                if (len(pub_res.publishers) > 0):
+                    topic_descriptors.append([result.topics[i], result.types[i]])
         return topic_descriptors
 
 def signal_handler(signal, frame):

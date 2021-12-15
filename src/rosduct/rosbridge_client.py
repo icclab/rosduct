@@ -265,7 +265,7 @@ class ROSBridgeClient(WebSocketClient):
             publisher = self._publishers.get(topic_name)
             publisher.usage += 1
         else:
-            #print('Advertising topic {} for publishing'.format(topic_name))
+            print('Advertising topic {} for publishing'.format(topic_name))
             publisher = _Publisher(
                 self, topic_name, message_type, latch, queue_size)
             self._publishers[topic_name] = publisher
@@ -304,7 +304,7 @@ class ROSBridgeClient(WebSocketClient):
         else:
             subscribe_id = 'subscribe:{}:{}'.format(
                 topic_name, self._id_counter)
-            #print('Sending request to subscribe topic {}'.format(topic_name))
+            print('Sending request to subscribe topic {}'.format(topic_name))
             self.send(json.dumps({
                 'op': 'subscribe',
                 'id': subscribe_id,
@@ -334,7 +334,7 @@ class ROSBridgeClient(WebSocketClient):
         if subscriber in subscribers:
             subscribers.remove(subscriber)
         if len(subscribers) == 0:
-            #print('Sending request to unsubscribe topic {}'.format(topic_name))
+            print('Sending request to unsubscribe topic {}'.format(topic_name))
             del subscribers[:]
             self.send(json.dumps({
                 'op': 'unsubscribe',
@@ -401,7 +401,7 @@ class ROSBridgeClient(WebSocketClient):
             service_name (str): The ROS service name.
         """
         if service_name in self._service_servers:
-            #print('Stop advertising service server {} for publishing'.format(service_name))
+            print('Stop advertising service server {} for publishing'.format(service_name))
             del self._service_servers[service_name]
 
     def action_client(self, server_name, action_name):
