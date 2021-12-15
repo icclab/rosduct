@@ -92,3 +92,9 @@ And make a launchfile that configures it to expose your needed topics/services. 
 So you run your Docker image exposing port 9090 (for rosbridge communication) `docker run -p 9090:9090 -it your_docker_image` and you run the previous launchfile before running your ROS node.
 
 To build the config you can do `rosnode info YOUR_NODE` and check the Publications (`local_topics`) and Subscriptions (`remote_topics`) and Services (`local_services`). For filling up remote_services you need to know what services your node calls.
+
+# Installation Notes
+
+Rosdep won't find python-pydispatcher, which will have to be installed manually
+
+  sudo apt install python-pydispatcher

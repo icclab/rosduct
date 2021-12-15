@@ -100,7 +100,7 @@ def from_ROS_to_dict(ros_msg):
     """
     # Note that this may be very slow for big data structures like
     # an sensor_msgs/Image
-    return yaml.load(ros_msg.__str__())
+    return yaml.safe_load(ros_msg.__str__())
 
 
 def from_dict_to_ROS(dict_msg, ros_message_type, srv=False):

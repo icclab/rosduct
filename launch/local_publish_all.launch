@@ -1,0 +1,10 @@
+<launch>
+  <node name="rosapi" pkg="rosapi" type="rosapi_node">
+     <param name="topics_glob" value="[*]" />
+     <param name="services_glob" value="[*]" />
+     <param name="params_glob" value="[*]" />
+  </node>
+  <node pkg="rosduct" name="rosduct" type="rosduct_main.py" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/all_local.yaml" />
+  </node>  
+</launch>

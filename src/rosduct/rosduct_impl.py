@@ -1,21 +1,22 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -m
 import sys
-sys.path.append('/home/ros/catkin_ws/src/rosduct/src/rosduct')
+import signal
+from rosapi.srv import Topics
 import rospy
 from rosduct.srv import ROSDuctConnection, ROSDuctConnectionResponse
-from conversions import from_dict_to_JSON
-from conversions import from_JSON_to_dict
-from conversions import from_dict_to_ROS
-from conversions import from_ROS_to_dict
-from conversions import from_JSON_to_ROS
-from conversions import from_ROS_to_JSON
-from conversions import get_ROS_msg_type
-from conversions import get_ROS_class
-from conversions import is_ros_message_installed, is_ros_service_installed
+from .conversions import from_dict_to_JSON
+from .conversions import from_JSON_to_dict
+from .conversions import from_dict_to_ROS
+from .conversions import from_ROS_to_dict
+from .conversions import from_JSON_to_ROS
+from .conversions import from_ROS_to_JSON
+from .conversions import get_ROS_msg_type
+from .conversions import get_ROS_class
+from .conversions import is_ros_message_installed, is_ros_service_installed
 from pydoc import locate
 import socket
 
-from rosbridge_client import ROSBridgeClient
+from .rosbridge_client import ROSBridgeClient
 
 """
 Server to expose locally and externally
@@ -67,8 +68,11 @@ class ROSduct(object):
         # TODO: check if topic types are installed, if not, give a warning
         self.remote_topics = rospy.get_param('~remote_topics', [])
         #rospy.loginfo("Remote topics: " + str(self.remote_topics))
-        self.local_topics = rospy.get_param('~local_topics', [])
-        #rospy.loginfo("Local topics: " + str(self.local_topics))
+        if (rospy.get_param('~all_local_topics', False)):
+          self.local_topics = self.get_all_local_topics()
+        else:
+          self.local_topics = rospy.get_param('~local_topics', [])
+          #rospy.loginfo("Local topics: " + str(self.local_topics))
 
         # Services
         # TODO: check if service types are installed
@@ -490,8 +494,22 @@ class ROSduct(object):
             self.sync_params()
             r.sleep()
 
+    def get_all_local_topics(self):        
+        api_client = rospy.ServiceProxy('/rosapi/topics', Topics)
+        result = api_client()
+               
+        topic_descriptors = []
+        for i in range(0, len(result.topics)):
+            if(result.topics[i] != "/rosout"):
+                topic_descriptors.append([result.topics[i], result.types[i]])
+        return topic_descriptors
 
-if __name__ == '__main__':
+def signal_handler(signal, frame):
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
     rospy.init_node('rosduct')
     r = ROSduct()
     r.spin()
