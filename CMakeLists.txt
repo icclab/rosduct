@@ -43,6 +43,7 @@ catkin_package(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   scripts/rosduct_main.py
+  scripts/rosduct_main_bridge.py
   scripts/test_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
