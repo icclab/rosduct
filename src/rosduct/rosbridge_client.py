@@ -21,15 +21,19 @@ class ROSBridgeClient(WebSocketClient):
     service servers and action clients.
     """
 
-    def __init__(self, ip, port=9090):
+    def __init__(self, ip, port=9090, wss=False):
         """Constructor for ROSBridgeClient.
 
         Args:
-            ip (str): The robot IP address.
+            ip (str): The remote IP address.
             port (int, optional): The WebSocket port number for rosbridge.
                 Defaults to 9090.
+            wss (bool, optional): whether or not to use wss
         """
-        self.urlstring = 'wss://{}:{}'.format(ip, port)
+        if (wss):
+            self.urlstring = 'wss://{}:{}'.format(ip, port)
+        else:
+            self.urlstring = 'ws://{}:{}'.format(ip, port)
         WebSocketClient.__init__(self, self.urlstring)
         self._connected = False
         self._id_counter = 0
@@ -458,6 +462,9 @@ class ROSBridgeClient(WebSocketClient):
             message(ws4py.messaging.Message): A message that sent from
                 ROS server.
         """
+        if isinstance(message, bytes):
+            message = message.decode("utf-8")
+        # print(message)
         data = json.loads(message.data)
         if 'topic' in data:
             # Note that the callback argument MUST be named message (damn.)
