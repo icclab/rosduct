@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rosduct)
+cmake_policy(SET CMP0048 NEW)
+project(rosduct
+  VERSION 0.0.7
+)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -44,7 +47,9 @@ catkin_package(
 install(PROGRAMS
   scripts/rosduct_main.py
   scripts/rosduct_main_bridge.py
+  scripts/rosduct_bridge_autobahn.py
   scripts/test_node.py
+  scripts/rosduct_param_sync.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

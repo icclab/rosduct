@@ -1,22 +1,30 @@
 # ROSbridge websocket server info
-rosbridge_ip: localhost
-rosbridge_port: 9090
-# Topics being published in the robot to expose locally
-remote_topics: [
-                    ['/text_1', 'std_msgs/String']
-                    ]
+rosbridge_ip: rosbridge.k8sbeta.init-lab.ch #172.17.0.1
+rosbridge_port: 443 #9090
+use_wss: true
+# Topics being published remotely to expose locally
+remote_topics:
+     [
+          ["/summit_xl/joint_states", "sensor_msgs/JointState"],
+          ["/tf", "tf2_msgs/TFMessage"],
+          ["/tf_static", "tf2_msgs/TFMessage"],
+     ]
+# ['/summit_xl/arm_camera/depth_registered/points', 'sensor_msgs/PointCloud2']
+# ["/text", "std_msgs/String"],
 # Topics being published in the local roscore to expose remotely
-local_topics: [
-                    ['/text_2', 'std_msgs/String']
-                    ]
-# Services running in the robot to expose locally
-remote_services: [
-                    
-                    ]
-# Services running locally to expose to the robot
-local_services: [
-                    
-                    ]
+all_local_topics: false
+local_topics: []
+# ['/summit_xl/joint_states', 'sensor_msgs/JointState'],
+# ["/text_2", "std_msgs/String"],
+# ['/camera/depth/points', 'sensor_msgs/PointCloud2'],
+# ['/camera/depth/image_raw', 'sensor_msgs/Image'],
+# ['/tf_static', 'tf2_msgs/TFMessage'],
+# ['/tf', 'tf2_msgs/TFMessage'],
+# Services running remotely to expose locally
+remote_services: [["/rosapi/topics", "rosapi/Topics"]]
+# ["/rosapi/get_param", "rosapi/GetParam"],
+# Services running locally to expose remotely
+local_services: [["/map_saver/get_loggers", "roscpp/GetLoggers"]]
 # Parameters to be sync, they will be polled to stay in sync
-parameters: ['/robot_description', '/test_suite/param_1']
-parameter_polling_hz: 1
+parameters: ["/summit_xl/robot_description"]
+parameter_polling_hz: 0.03

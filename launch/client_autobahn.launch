@@ -1,0 +1,10 @@
+<launch>
+  <env name="ROS_PYTHON_LOG_CONFIG_FILE"
+       value="$(find rosduct)/config/python_logging.conf"/>
+  <node pkg="rosduct" name="rosduct" type="rosduct_main_bridge_autobahn.py" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/my.yaml" />
+  </node>
+  <node pkg="rosduct" name="rosduct_param_sync" type="rosduct_param_sync.py" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/my.yaml" />
+  </node>
+</launch>

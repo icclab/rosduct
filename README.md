@@ -95,6 +95,14 @@ To build the config you can do `rosnode info YOUR_NODE` and check the Publicatio
 
 # Installation Notes
 
-Rosdep won't find python-pydispatcher, which will have to be installed manually
+First run rosdep from the catkin_ws dir:
 
-  sudo apt install python-pydispatcher
+  rosdep install -ry --from-path src/rosduct
+
+Still, rosdep won't find python-pydispatcher, which will have to be installed manually
+
+  sudo apt install python3-pydispatch
+
+Build"
+
+  catkin build rosduct

@@ -11,6 +11,7 @@ from ast import literal_eval
 from ws4py.client.threadedclient import WebSocketClient
 # sudo pip install PyDispatcher
 from pydispatch import dispatcher
+from cbor import loads as decode_cbor
 
 
 class ROSBridgeClient(WebSocketClient):
@@ -21,7 +22,7 @@ class ROSBridgeClient(WebSocketClient):
     service servers and action clients.
     """
 
-    def __init__(self, ip, port=9090, wss=False):
+    def __init__(self, ip, incoming_queue, port=9090, wss=False):
         """Constructor for ROSBridgeClient.
 
         Args:
@@ -42,6 +43,7 @@ class ROSBridgeClient(WebSocketClient):
         self._service_clients = {}
         self._service_servers = {}
         self._action_clients = {}
+        self.incoming_queue = incoming_queue
 
         self.connect()
         self.client_thread = threading.Thread(target=self.run_forever)
@@ -462,10 +464,12 @@ class ROSBridgeClient(WebSocketClient):
             message(ws4py.messaging.Message): A message that sent from
                 ROS server.
         """
-        if isinstance(message, bytes):
-            message = message.decode("utf-8")
-        # print(message)
-        data = json.loads(message.data)
+        # self.incoming_queue.push(message)
+        
+        if message.is_binary:
+            data = decode_cbor(message.data)
+        else:
+            data = json.loads(message.data)
         if 'topic' in data:
             # Note that the callback argument MUST be named message (damn.)
             dispatcher.send(signal=data.get('topic'), message=data.get('msg'))

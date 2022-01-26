@@ -21,8 +21,7 @@ import threading
 
 from .rosbridge_client import ROSBridgeClient
 from rosbridge_library.rosbridge_protocol import RosbridgeProtocol
-
-
+from rosbridge_server.autobahn_websocket import IncomingQueue
 
 
 """
@@ -85,8 +84,8 @@ class ROSductBridge(object):
             self.protocol = RosbridgeProtocol(
                 "TODO_generate_client_ID", parameters
             )
-            # self.incoming_queue = IncomingQueue(self.protocol)
-            # self.incoming_queue.start()
+            self.incoming_queue = IncomingQueue(self.protocol)
+            self.incoming_queue.start()
             self.protocol.outgoing = self.send_message
             # self.set_nodelay(True)
             # self._write_lock = threading.RLock()            
@@ -165,7 +164,7 @@ class ROSductBridge(object):
         while not rospy.is_shutdown() and not connected:
             try:
                 self.client = ROSBridgeClient(
-                    self.rosbridge_ip, self.rosbridge_port, self.wss)
+                    self.rosbridge_ip, self.incoming_queue, self.rosbridge_port, self.wss)
                 connected = True
             except socket.error as e:
                 rospy.logwarn(
@@ -292,37 +291,41 @@ class ROSductBridge(object):
         return ROSDuctConnectionResponse()
 
     def add_remote_topic(self, msg):
-        # a remote topic means a remote subscribe 
-        # and a local publish operation
-        p_msg = {}
-        p_msg["op"] = "subscribe"
-        p_msg["topic"] = msg.conn_name
-        # p_msg["compression"] = "cbor"
-        # send remote subscription req
-        self.protocol.outgoing(json.dumps(p_msg))
-        # process internally as local pub
-        p_msg["op"] = "publish"
-        self.protocol.incoming(message_string=json.dumps(p_msg))
+        # # a remote topic means a remote subscribe 
+        # # and a local publish operation
+        # p_msg = {}
+        # p_msg["op"] = "subscribe"
+        # p_msg["topic"] = msg.conn_name
+        # # p_msg["compression"] = "cbor"
+        # # send remote subscription req
+        # self.protocol.outgoing(json.dumps(p_msg))
+        # # advertise internally
+        # p_msg["op"] = "advertise"
+        # p_msg["type"] = msg.conn_type
+        # self.protocol.incoming(message_string=json.dumps(p_msg))
+        # # process internally as local pub
+        # p_msg["op"] = "publish"
+        # self.protocol.incoming(message_string=json.dumps(p_msg))
 
-        # rospub = rospy.Publisher(msg.alias_name,
-        #                          get_ROS_class(msg.conn_type),
-        #                          # SubscribeListener added later
-        #                          queue_size=1,
-        #                          latch=msg.latch)
+        rospub = rospy.Publisher(msg.alias_name,
+                                 get_ROS_class(msg.conn_type),
+                                 # SubscribeListener added later
+                                 queue_size=1,
+                                 latch=msg.latch)
 
-        # cb_r_to_l = self.create_callback_from_remote_to_local(msg.conn_name,
-        #                                                       msg.conn_type,
-        #                                                       rospub)
-        # subl = self.create_subscribe_listener(msg.conn_name,
-        #                                       msg.conn_type,
-        #                                       cb_r_to_l)
-        # rospub.impl.add_subscriber_listener(subl)
-        # self._instances['topics'].append(
-        #     {msg.conn_name:
-        #      {'rospub': rospub,
-        #       'bridgesub': None}
-        #      })
-        # return ROSDuctConnectionResponse()
+        cb_r_to_l = self.create_callback_from_remote_to_local(msg.conn_name,
+                                                              msg.conn_type,
+                                                              rospub)
+        subl = self.create_subscribe_listener(msg.conn_name,
+                                              msg.conn_type,
+                                              cb_r_to_l)
+        rospub.impl.add_subscriber_listener(subl)
+        self._instances['topics'].append(
+            {msg.conn_name:
+             {'rospub': rospub,
+              'bridgesub': None}
+             })
+        return ROSDuctConnectionResponse()
 
     def remove_remote_topic(self, msg):
         for i, topic in enumerate(self._instances['topics']):
