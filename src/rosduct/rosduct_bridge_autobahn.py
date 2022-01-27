@@ -287,21 +287,24 @@ class ROSductBridge(object):
         self._instances = {'topics': [],
                            'services': []}
         for r_t in self.remote_topics:
+            latch = False
+            throttle_rate = 0
             if len(r_t) == 2:
                 topic_name, topic_type = r_t
-                local_name = topic_name
-                latch = False
+                local_name = topic_name                
             elif len(r_t) == 3:
                 topic_name, topic_type, local_name = r_t
-                latch = False
             elif len(r_t) == 4:
                 topic_name, topic_type, local_name, latch = r_t
+            elif len(r_t) == 5:
+                topic_name, topic_type, local_name, latch, throttle_rate = r_t
 
             msg = ROSDuctConnection()
             msg.conn_name = topic_name
             msg.conn_type = topic_type
             msg.alias_name = local_name
             msg.latch = latch if latch.__class__ == bool else latch.lower() == 'true'
+            msg.throttle_rate = throttle_rate if throttle_rate.__class__ == int else 0
             self.add_remote_topic(msg)
 
         for l_t in self.local_topics:
@@ -419,7 +422,7 @@ class ROSductBridge(object):
             "Deferring subscription to remote topic %s until we have a local subscriber", msg.conn_name)
 
         subl = self.create_subscribe_listener(msg.conn_name,
-                                              msg.conn_type)
+                                              msg.conn_type, msg.latch, msg.throttle_rate)
 
         # register subscriber listener to perform actual remote subscription only once we have a local subscriber
         manager._publishers[msg.conn_name].publisher.impl.add_subscriber_listener(
@@ -491,7 +494,9 @@ class ROSductBridge(object):
 
     def create_subscribe_listener(self,
                                   topic_name,
-                                  topic_type):
+                                  topic_type,
+                                  latch,
+                                  throttle_rate):
         # We create a SubscribeListener that will
         # create a rosbridge subscriber on demand
         # and also unregister it if no one is listening
@@ -512,6 +517,8 @@ class ROSductBridge(object):
                     p_msg["op"] = "subscribe"
                     p_msg["topic"] = topic_name
                     p_msg["type"] = topic_type
+                    p_msg["latch"] = latch
+                    p_msg["throttle_rate"] = throttle_rate
                     p_msg["compression"] = "cbor"
                     # send remote subscription req
                     self.protocol.outgoing(json.dumps(p_msg))

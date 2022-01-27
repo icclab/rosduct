@@ -8,9 +8,10 @@ remote_topics:
           ["/summit_xl/joint_states", "sensor_msgs/JointState"],
           ["/tf", "tf2_msgs/TFMessage"],
           ["/tf_static", "tf2_msgs/TFMessage"],
+          ["/text", "std_msgs/String"],
+          ["/summit_xl/arm_camera/depth_registered/points", "sensor_msgs/PointCloud2", "/summit_xl/arm_camera/depth_registered/points", false, 5000],
      ]
-# ['/summit_xl/arm_camera/depth_registered/points', 'sensor_msgs/PointCloud2']
-# ["/text", "std_msgs/String"],
+
 # Topics being published in the local roscore to expose remotely
 all_local_topics: false
 local_topics: []
