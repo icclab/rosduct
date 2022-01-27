@@ -77,8 +77,8 @@ class ROSductBridge(object):
         parameters = {
             "fragment_timeout": 600,  # seconds
             "delay_between_messages": 0,  # seconds
-            "max_message_size": 10000000,  # bytes
-            "unregister_timeout": 10.0,  # seconds
+            "max_message_size": 4000,  # bytes
+            "unregister_timeout": 30.0,  # seconds
             "bson_only_mode": False,
             # "compression": "cbor",
         }
@@ -390,7 +390,7 @@ class ROSductBridge(object):
                     p_msg["op"] = "subscribe"
                     p_msg["topic"] = topic_name
                     p_msg["type"] = topic_type
-                    # p_msg["compression"] = "cbor"
+                    # p_msg["compression"] = "cbor-raw"
                     # send remote subscription req
                     self.protocol.outgoing(json.dumps(p_msg))
                     rospy.loginfo("Subscribed to remote topic %s %s",
@@ -404,17 +404,16 @@ class ROSductBridge(object):
                 # Unsubscribe if there isnt anyone left
                 if num_peers < 1:
                     rospy.logdebug(
-                        "There are no more subscribers to: " + topic_name)
-                    # self.client.unsubscribe(this.bridgesub)
+                        "There are no more subscribers to: " + topic_name)                    
                     p_msg = {}
                     p_msg["op"] = "unsubscribe"
                     p_msg["topic"] = topic_name
                     p_msg["type"] = topic_type
-                    # p_msg["compression"] = "cbor"
+                    # p_msg["compression"] = "cbor-raw"
                     # send remote subscription req
                     self.protocol.outgoing(json.dumps(p_msg))
                     rospy.sleep(0.1)
-                    manager._publishers[topic_name].unregister()
+                    # manager._publishers[topic_name].unregister()
 
         return CustomSubscribeListener()
 

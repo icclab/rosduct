@@ -21,7 +21,8 @@ class RosDuctParamSync:
                 # remote param name is the first one
                 param = param[0]                
             self.last_params[param] = self.get_param(param)
-            rospy.set_param(param, self.last_params[param])
+            if (self.last_params[param] != None):
+                rospy.set_param(param, self.last_params[param])
 
     def sync_params(self):
         """
@@ -37,7 +38,7 @@ class RosDuctParamSync:
                 local_param = param
             # Get remote param
             remote_param = self.get_param(param)
-            if remote_param != self.last_params[param]:
+            if remote_param != self.last_params[param] and remote_param != None:
                 rospy.set_param(local_param, remote_param)
                 self.last_params[param] = remote_param
 

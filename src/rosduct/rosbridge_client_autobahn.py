@@ -1,10 +1,14 @@
+from concurrent.futures import thread
 import sys
 import threading
+from time import sleep
 from twisted.python import log
 from twisted.internet import reactor, ssl
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory, connectWS
+from cbor import loads as decode_cbor
 
 bridge = None
+
 
 class ROSBridgeClient():
 
@@ -19,27 +23,28 @@ class ROSBridgeClient():
 class ROSBridgeWSClient(WebSocketClientProtocol):
 
     def onConnect(self, response):
-        print("OnConnect:" + str(response))
+        print("Succesfully connected to:" + str(response))
 
     def onOpen(self):
         # print("OnOpen")
-        # print("Bridge: " + str(bridge))
-        # # self.sendMessage(u"Hello, world!".encode('utf8'))
         bridge.init_bridge(self)
 
     def onMessage(self, payload, isBinary):
+        # print("Message received")
         if isBinary:
-            print("Binary message received: {0} bytes".format(len(payload)))
-            # bridge.incoming_queue.push(payload)
+            # print("Binary message received: {0} bytes".format(len(payload)))
+            message = decode_cbor(payload)
+            # print("Binary message decoded: {0}".format(message))            
         else:
             message = payload.decode('utf8')
-            # print("Text message received: {0}".format(message))
-            # bridge.incoming_queue.push(message)
-            bridge.protocol.incoming(message_string=message)
+            # print("Text message received: {0}".format(len(payload)))
+            # bridge.incoming_queue.push(message)        
+        bridge.incoming_queue.push(message)
 
 
 class ROSBridgeWSClientFactory(WebSocketClientFactory):
     protocol = ROSBridgeWSClient
+    sleep_time = 1
 
     def clientConnectionFailed(self, connector, reason):
         print("Connection failed - goodbye!")
@@ -47,7 +52,12 @@ class ROSBridgeWSClientFactory(WebSocketClientFactory):
 
     def clientConnectionLost(self, connector, reason):
         print("Connection lost - reason: {0}".format(reason))
+        # sleep exponential time
+        print("Sleeping {0} secs".format(self.sleep_time))
+        sleep(self.sleep_time)
+        self.sleep_time *= 2
         # reconnect
+        print("Reconnecting...")
         connectWS(self)
         # reactor.stop()
 
@@ -70,7 +80,7 @@ class EchoWSClient(WebSocketClientProtocol):
 
 if __name__ == '__main__':
     log.startLogging(sys.stdout)
-    factory = ROSBridgeWSClientFactory("wss://rosbridge.k8sbeta.init-lab.ch")
+    factory = ROSBridgeWSClientFactory(sys.argv[1])
     factory.protocol = EchoWSClient
     connectWS(factory)
     reactor.run()
