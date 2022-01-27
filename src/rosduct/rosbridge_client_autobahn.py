@@ -5,7 +5,7 @@ from time import sleep
 from twisted.python import log
 from twisted.internet import reactor, ssl
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory, connectWS
-from cbor import loads as decode_cbor
+from rosbridge_library.util.cbor import loads as decode_cbor
 
 bridge = None
 
@@ -31,15 +31,19 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
 
     def onMessage(self, payload, isBinary):
         # print("Message received")
+        # print("Message payload type: {0}".format(type(payload)))
         if isBinary:
             # print("Binary message received: {0} bytes".format(len(payload)))
-            message = decode_cbor(payload)
-            # print("Binary message decoded: {0}".format(message))            
+            # message = decode_cbor(payload)            
+            # we leave the payload in bytes and decode it later
+            message = payload
+            # print("Binary message decoded: {0}".format(message))
         else:
-            message = payload.decode('utf8')
             # print("Text message received: {0}".format(len(payload)))
-            # bridge.incoming_queue.push(message)        
+            message = payload.decode('utf8')
+            # print("Text message received: {0}".format(message))            
         bridge.incoming_queue.push(message)
+        # bridge.protocol.incoming(message)
 
 
 class ROSBridgeWSClientFactory(WebSocketClientFactory):
