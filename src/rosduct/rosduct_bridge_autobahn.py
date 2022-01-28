@@ -73,7 +73,7 @@ def synchronized(func):
     return synced_func
 
 
-class RosbridgeProtocolExtended(RosbridgeProtocol):
+class RosbridgeProtocolCBOR(RosbridgeProtocol):
 
     def __init__(self, client_id, parameters):
         self.parameters = parameters
@@ -206,7 +206,7 @@ class ROSductBridge(object):
         }
 
         try:
-            self.protocol = RosbridgeProtocolExtended(
+            self.protocol = RosbridgeProtocolCBOR(
                 "rosduct", parameters
             )
             self.incoming_queue = IncomingQueue(self.protocol)
@@ -280,7 +280,6 @@ class ROSductBridge(object):
         ROSBridgeClient(urlstring, self)
 
     def init_bridge(self, client):
-        print("init_bridge")
         self.client = client
 
         # We keep track of the instanced stuff in this dict

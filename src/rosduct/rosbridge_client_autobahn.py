@@ -5,7 +5,10 @@ from time import sleep
 from twisted.python import log
 from twisted.internet import reactor, ssl
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory, connectWS
-from rosbridge_library.util.cbor import loads as decode_cbor
+from autobahn.websocket.compress import PerMessageDeflateOffer, \
+    PerMessageDeflateOfferAccept, \
+    PerMessageDeflateResponse, \
+    PerMessageDeflateResponseAccept
 
 bridge = None
 
@@ -24,6 +27,8 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
 
     def onConnect(self, response):
         print("Succesfully connected to:" + str(response))
+        print("WebSocket extensions in use: {}".format(response.extensions))
+
 
     def onOpen(self):
         # print("OnOpen")
@@ -34,14 +39,14 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
         # print("Message payload type: {0}".format(type(payload)))
         if isBinary:
             # print("Binary message received: {0} bytes".format(len(payload)))
-            # message = decode_cbor(payload)            
+            # message = decode_cbor(payload)
             # we leave the payload in bytes and decode it later
             message = payload
             # print("Binary message decoded: {0}".format(message))
         else:
             # print("Text message received: {0}".format(len(payload)))
             message = payload.decode('utf8')
-            # print("Text message received: {0}".format(message))            
+            # print("Text message received: {0}".format(message))
         bridge.incoming_queue.push(message)
         # bridge.protocol.incoming(message)
 
@@ -49,6 +54,22 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
 class ROSBridgeWSClientFactory(WebSocketClientFactory):
     protocol = ROSBridgeWSClient
     sleep_time = 1
+
+    def __init__(self, url):
+        WebSocketClientFactory.__init__(self, url)
+        # Enable WebSocket extension "permessage-deflate".
+
+        # The extensions offered to the server ..
+        offers = [PerMessageDeflateOffer()]
+        self.setProtocolOptions(perMessageCompressionOffers=offers)
+
+        # Function to accept responses from the server ..
+        def accept(response):
+            if isinstance(response, PerMessageDeflateResponse):
+                print("Received PerMessageDeflateResponse")
+                return PerMessageDeflateResponseAccept(response)
+
+        self.setProtocolOptions(perMessageCompressionAccept=accept)
 
     def clientConnectionFailed(self, connector, reason):
         print("Connection failed - goodbye!")
@@ -69,7 +90,7 @@ class ROSBridgeWSClientFactory(WebSocketClientFactory):
 class EchoWSClient(WebSocketClientProtocol):
 
     def onConnect(self, response):
-        print("OnConnect:" + str(response))
+        print("WebSocket extensions in use: {}".format(response.extensions))
 
     def onOpen(self):
         print("OnOpen")
@@ -83,8 +104,13 @@ class EchoWSClient(WebSocketClientProtocol):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Need the WebSocket server address, i.e. ws://127.0.0.1:9000")
+        sys.exit(1)
+
     log.startLogging(sys.stdout)
     factory = ROSBridgeWSClientFactory(sys.argv[1])
-    factory.protocol = EchoWSClient
+    factory.protocol = EchoWSClient    
+    factory.protocol.log.set_log_level("debug")
     connectWS(factory)
     reactor.run()
