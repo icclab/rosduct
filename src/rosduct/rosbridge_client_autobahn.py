@@ -1,14 +1,14 @@
-from concurrent.futures import thread
+import signal
 import sys
-import threading
 from time import sleep
+
+from autobahn.twisted.websocket import (WebSocketClientFactory,
+                                        WebSocketClientProtocol, connectWS)
+from autobahn.websocket.compress import (PerMessageDeflateOffer,
+                                         PerMessageDeflateResponse,
+                                         PerMessageDeflateResponseAccept)
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import reactor, ssl
-from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory, connectWS
-from autobahn.websocket.compress import PerMessageDeflateOffer, \
-    PerMessageDeflateOfferAccept, \
-    PerMessageDeflateResponse, \
-    PerMessageDeflateResponseAccept
 
 bridge = None
 
@@ -18,6 +18,8 @@ class ROSBridgeClient():
     def __init__(self, ws_url, bridge_ref):
         global bridge
         self.factory = ROSBridgeWSClientFactory(ws_url)
+        self.factory.protocol = ROSBridgeWSClient
+        # self.factory.protocol.log.set_log_level("debug")
         bridge = bridge_ref
         connectWS(self.factory)
         reactor.run()
@@ -26,12 +28,11 @@ class ROSBridgeClient():
 class ROSBridgeWSClient(WebSocketClientProtocol):
 
     def onConnect(self, response):
-        print("Succesfully connected to:" + str(response))
-        print("WebSocket extensions in use: {}".format(response.extensions))
-
+        print("Connected. WebSocket extensions in use: {}".format(
+            response.extensions))
 
     def onOpen(self):
-        # print("OnOpen")
+        print("OnOpen")
         bridge.init_bridge(self)
 
     def onMessage(self, payload, isBinary):
@@ -52,7 +53,6 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
 
 
 class ROSBridgeWSClientFactory(WebSocketClientFactory):
-    protocol = ROSBridgeWSClient
     sleep_time = 1
 
     def __init__(self, url):
@@ -103,14 +103,21 @@ class EchoWSClient(WebSocketClientProtocol):
             print("Text message received: {0}".format(payload.decode('utf8')))
 
 
-if __name__ == '__main__':
+def signal_handler(signal, frame):
+    print('You pressed Ctrl+C!')
+    reactor.stop()
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
     if len(sys.argv) < 2:
         print("Need the WebSocket server address, i.e. ws://127.0.0.1:9000")
         sys.exit(1)
 
     log.startLogging(sys.stdout)
     factory = ROSBridgeWSClientFactory(sys.argv[1])
-    factory.protocol = EchoWSClient    
+    factory.protocol = EchoWSClient
     factory.protocol.log.set_log_level("debug")
     connectWS(factory)
     reactor.run()
