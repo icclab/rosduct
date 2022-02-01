@@ -9,6 +9,7 @@ from autobahn.websocket.compress import PerMessageDeflateOffer, \
     PerMessageDeflateOfferAccept, \
     PerMessageDeflateResponse, \
     PerMessageDeflateResponseAccept
+import rospy
 
 bridge = None
 
@@ -21,6 +22,12 @@ class ROSBridgeClient():
         bridge = bridge_ref
         connectWS(self.factory)
         reactor.run()
+
+    def stop(self):
+        self.factory.stopped = True
+        self.factory.loseConnection()
+        self.factory.clientConnectionFailed()
+        reactor.stop()
 
 
 class ROSBridgeWSClient(WebSocketClientProtocol):
@@ -77,14 +84,16 @@ class ROSBridgeWSClientFactory(WebSocketClientFactory):
 
     def clientConnectionLost(self, connector, reason):
         print("Connection lost - reason: {0}".format(reason))
-        # sleep exponential time
-        print("Sleeping {0} secs".format(self.sleep_time))
-        sleep(self.sleep_time)
-        self.sleep_time *= 2
-        # reconnect
-        print("Reconnecting...")
-        connectWS(self)
-        # reactor.stop()
+        if not rospy.is_shutdown():
+            # sleep exponential time
+            print("Sleeping {0} secs".format(self.sleep_time))
+            sleep(self.sleep_time)
+            self.sleep_time *= 2
+            # reconnect
+            print("Reconnecting...")
+            connectWS(self)
+        else:
+            reactor.stop()
 
 
 class EchoWSClient(WebSocketClientProtocol):
