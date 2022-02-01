@@ -1,5 +1,4 @@
 #!/usr/bin/env python3 -m
-import string
 import sys
 import signal
 from rosapi.srv import Topics, Publishers
@@ -23,6 +22,7 @@ from .rosbridge_protocol_cbor import RosbridgeProtocolCBOR
 from rosbridge_library.internal.publishers import manager
 from rosbridge_server.autobahn_websocket import IncomingQueue
 from rosbridge_library.util import json, bson
+
 
 
 """

@@ -6,8 +6,10 @@ class RosbridgeProtocolCBOR(RosbridgeProtocol):
     def __init__(self, client_id, parameters):
         self.parameters = parameters
         RosbridgeProtocol.__init__(self, client_id)
+
         self.log(
             "warning", "Starting RosbridgeProtocolCBOR (extended to receive CBOR)")
+
 
     # We ovveride incoming losing fragmentation but adding cbor support
     def incoming(self, message_string=""):
