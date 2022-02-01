@@ -15,8 +15,10 @@ from autobahn.websocket.compress import PerMessageDeflateOffer, \
     PerMessageDeflateOfferAccept, \
     PerMessageDeflateResponse, \
     PerMessageDeflateResponseAccept
-import rospy
+from threading import Event
+import signal
 
+exit = Event()
 bridge = None
 
 
@@ -28,14 +30,15 @@ class ROSBridgeClient():
         self.factory.protocol = ROSBridgeWSClient
         # self.factory.protocol.log.set_log_level("debug")
         bridge = bridge_ref
-        connectWS(self.factory)
-        reactor.run()
 
     def stop(self):
-        self.factory.stopped = True
-        self.factory.loseConnection()
-        self.factory.clientConnectionFailed()
+        print("Stopping the bridge client")        
+        exit.set()
         reactor.stop()
+
+    def start(self):
+        connectWS(self.factory)
+        reactor.run()
 
 
 class ROSBridgeWSClient(WebSocketClientProtocol):
@@ -67,6 +70,7 @@ class ROSBridgeWSClient(WebSocketClientProtocol):
 
 class ROSBridgeWSClientFactory(WebSocketClientFactory):
     sleep_time = 1
+    stopped = False
 
     def __init__(self, url):
         WebSocketClientFactory.__init__(self, url)
@@ -85,21 +89,24 @@ class ROSBridgeWSClientFactory(WebSocketClientFactory):
         self.setProtocolOptions(perMessageCompressionAccept=accept)
 
     def clientConnectionFailed(self, connector, reason):
-        print("Connection failed - goodbye!")
-        reactor.stop()
+        print("Connection failed")
+        self.reconnect()
 
     def clientConnectionLost(self, connector, reason):
         print("Connection lost - reason: {0}".format(reason))
-        if not rospy.is_shutdown():
+        self.reconnect()
+
+    def reconnect(self):
+        if not exit.is_set():
             # sleep exponential time
             print("Sleeping {0} secs".format(self.sleep_time))
-            sleep(self.sleep_time)
-            self.sleep_time *= 2
+            exit.wait(self.sleep_time)
+            self.sleep_time *= 2            
             # reconnect
             print("Reconnecting...")
             connectWS(self)
         else:
-            reactor.stop()
+            reactor.sigInt(signal.SIGINT)
 
 
 class EchoWSClient(WebSocketClientProtocol):
@@ -119,7 +126,7 @@ class EchoWSClient(WebSocketClientProtocol):
 
 
 def signal_handler(signal, frame):
-    print('You pressed Ctrl+C!')
+    print('You pressed Ctrl+C!2')
     reactor.stop()
     sys.exit(0)
 

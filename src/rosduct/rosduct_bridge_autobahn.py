@@ -59,7 +59,6 @@ local_services: [
 parameters: ['/robot_description']
 parameter_polling_hz: 1'''
 
-bridge = None
 
 def synchronized(func):
     func.__lock__ = threading.Lock()
@@ -71,6 +70,7 @@ def synchronized(func):
     return synced_func
 
 class ROSductBridge(object):
+    client = None
 
     def __init__(self, node_handle):
         parameters = {
@@ -131,10 +131,9 @@ class ROSductBridge(object):
 
         self.check_if_msgs_are_installed()
 
-        self.initialize()
 
     def send_message(self, message):
-        rospy.logdebug("Outgoing Message is: %s", message)
+        # rospy.logdebug("Outgoing Message is: %s", message)
         if type(message) == bson.BSON:
             binary = True
             message = bytes(message)
@@ -145,7 +144,7 @@ class ROSductBridge(object):
             binary = False
             message = message.encode('utf-8')
 
-        self.client.sendMessage(message, binary)
+        self.websocketclient.sendMessage(message, binary)
 
     def initialize(self):
         """
@@ -164,11 +163,11 @@ class ROSductBridge(object):
         else:
             urlstring = 'ws://{}:{}'.format(self.rosbridge_ip,
                                             self.rosbridge_port)
-        ROSBridgeClient(urlstring, self)
+        self.client = ROSBridgeClient(urlstring, self)
+        self.client.start()
 
-    def init_bridge(self, client):
-        self.client = client
-
+    def init_bridge(self, websocketclient):
+        self.websocketclient = websocketclient
         # We keep track of the instanced stuff in this dict
         self._instances = {'topics': [],
                            'services': []}
@@ -278,9 +277,9 @@ class ROSductBridge(object):
         p_msg["throttle_rate"] = msg.throttle_rate
         # this advertises the topic remotely
         self.protocol.outgoing(json.dumps(p_msg))
+        # FIXME: we should create the subscription only if there's a remote subscriber
         # this creates the local subscription
         p_msg["op"] = "subscribe"      
-
         self.protocol.incoming(message_string=json.dumps(p_msg))
         rospy.loginfo("Advertised remotely the local topic %s", msg.conn_name)
 
@@ -527,17 +526,10 @@ class ROSductBridge(object):
         """
         Run the node, needed to update the parameter server.
         """
+        self.initialize()
         r = rospy.Rate(self.rate_hz)
         while not rospy.is_shutdown():
-            # if self.client.terminated: # we've lost the connection
-            #     rospy.logerr("Unexpected disconnect from server, shutting down...")
-            #     rospy.signal_shutdown("We've lost the connection!")
-            #     #del self.client # will this remove all the pub/sub objects?
-            #     #self.client.reconnect()
-            #     #self.initialize()
-
-            # FIXME: implement sync_params() as external node
-            # self.sync_params()
+            # do nothing
             r.sleep()
 
     def get_all_local_topics(self):
@@ -558,11 +550,10 @@ class ROSductBridge(object):
 
 
 def signal_handler(signal, frame):
-    global bridge
-    print('You pressed Ctrl+C!')
-    if bridge != None:
-        bridge.client.stop()
-    rospy.shutdown()
+    print('Rosduct: You pressed Ctrl+C!')
+    print(bridge)
+    print(bridge.client)
+    bridge.client.stop()
     sys.exit(0)
 
 
