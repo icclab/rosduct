@@ -23,7 +23,7 @@ from rosbridge_library.internal.publishers import manager
 from rosbridge_server.autobahn_websocket import IncomingQueue
 from rosbridge_library.util import json, bson
 
-
+USE_CBOR=True
 
 """
 Server to expose locally and externally
@@ -78,9 +78,11 @@ class ROSductBridge(object):
             "delay_between_messages": 0,  # seconds
             "max_message_size": 4000,  # bytes
             "unregister_timeout": 30.0,  # seconds
-            "bson_only_mode": False,
-            "compression": "cbor",
+            "bson_only_mode": False
         }
+
+        if USE_CBOR:
+            parameters["compression"] = "cbor"
 
         try:
             self.protocol = RosbridgeProtocolCBOR(
@@ -247,22 +249,22 @@ class ROSductBridge(object):
                 param = param[0]
             self.last_params[param] = self.get_param(param)
 
-        self.expose_local_topic = rospy.Service(
-            '~expose_local_topic', ROSDuctConnection, self.add_local_topic)
-        self.close_local_topic = rospy.Service(
-            '~close_local_topic', ROSDuctConnection, self.remove_local_topic)
-        self.expose_local_service = rospy.Service(
-            '~expose_local_service', ROSDuctConnection, self.add_local_service)
-        self.close_local_service = rospy.Service(
-            '~close_local_service', ROSDuctConnection, self.remove_local_service)
-        self.expose_remote_topic = rospy.Service(
-            '~expose_remote_topic', ROSDuctConnection, self.add_remote_topic)
-        self.close_remote_topic = rospy.Service(
-            '~close_remote_topic', ROSDuctConnection, self.remove_remote_topic)
-        self.expose_remote_service = rospy.Service(
-            '~expose_remote_service', ROSDuctConnection, self.add_remote_service)
-        self.close_remote_service = rospy.Service(
-            '~close_remote_service', ROSDuctConnection, self.remove_remote_service)
+        # self.expose_local_topic = rospy.Service(
+        #     '~expose_local_topic', ROSDuctConnection, self.add_local_topic)
+        # self.close_local_topic = rospy.Service(
+        #     '~close_local_topic', ROSDuctConnection, self.remove_local_topic)
+        # self.expose_local_service = rospy.Service(
+        #     '~expose_local_service', ROSDuctConnection, self.add_local_service)
+        # self.close_local_service = rospy.Service(
+        #     '~close_local_service', ROSDuctConnection, self.remove_local_service)
+        # self.expose_remote_topic = rospy.Service(
+        #     '~expose_remote_topic', ROSDuctConnection, self.add_remote_topic)
+        # self.close_remote_topic = rospy.Service(
+        #     '~close_remote_topic', ROSDuctConnection, self.remove_remote_topic)
+        # self.expose_remote_service = rospy.Service(
+        #     '~expose_remote_service', ROSDuctConnection, self.add_remote_service)
+        # self.close_remote_service = rospy.Service(
+        #     '~close_remote_service', ROSDuctConnection, self.remove_remote_service)
 
     def add_local_topic(self, msg):
         rospy.loginfo("Add local topic %s", msg.conn_name)
@@ -270,9 +272,11 @@ class ROSductBridge(object):
         # and an advertise operation
         p_msg = {}
         p_msg["op"] = "advertise"
+        # FIXME: here we should use alias name, but we'd have to adjust the local subscribe
         p_msg["topic"] = msg.conn_name
         p_msg["type"] = msg.conn_type
-        p_msg["compression"] = "cbor"
+        if USE_CBOR:
+            p_msg["compression"] = "cbor"
         p_msg["latch"] = msg.latch
         p_msg["throttle_rate"] = msg.throttle_rate
         # this advertises the topic remotely
@@ -407,7 +411,8 @@ class ROSductBridge(object):
                     p_msg["type"] = topic_type
                     p_msg["latch"] = latch
                     p_msg["throttle_rate"] = throttle_rate
-                    p_msg["compression"] = "cbor"
+                    if USE_CBOR:
+                        p_msg["compression"] = "cbor"                    
                     # send remote subscription req
                     self.protocol.outgoing(json.dumps(p_msg))
                     rospy.loginfo("Subscribed to remote topic %s %s",
@@ -426,7 +431,8 @@ class ROSductBridge(object):
                     p_msg["op"] = "unsubscribe"
                     p_msg["topic"] = topic_name
                     p_msg["type"] = topic_type
-                    p_msg["compression"] = "cbor"
+                    if USE_CBOR:
+                        p_msg["compression"] = "cbor"
                     # send remote unsubscription req
                     self.protocol.outgoing(json.dumps(p_msg))
                     rospy.loginfo("Unsubscribed from remote topic %s %s",
