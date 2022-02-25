@@ -99,10 +99,7 @@ First run rosdep from the catkin_ws dir:
 
   rosdep install -ry --from-path src/rosduct
 
-Still, rosdep won't find python-pydispatcher, which will have to be installed manually
 
-  sudo apt install python3-pydispatch
-
-Build"
+Build:
 
   catkin build rosduct
