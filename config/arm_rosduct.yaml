@@ -21,7 +21,7 @@ local_topics: [
               ['/niryo_one_follow_joint_trajectory_controller/follow_joint_trajectory/feedback', 'control_msgs/FollowJointTrajectoryActionFeedback'],
               ['/niryo_one_follow_joint_trajectory_controller/follow_joint_trajectory/result', 'control_msgs/FollowJointTrajectoryActionResult'],
               ['/niryo_one_follow_joint_trajectory_controller/follow_joint_trajectory/status', 'actionlib_msgs/GoalStatusArray'],
-              ['/joint_states', 'sensor_msgs/JointState', 'js', false, 100],
+              ['/joint_states', 'sensor_msgs/JointState'],
               ['/niryo_one_follow_joint_trajectory_controller/state', 'control_msgs/JointTrajectoryControllerState'],
               #["/text_2", "std_msgs/String"],
               #['/camera/depth_registered/points', 'sensor_msgs/PointCloud2', "pc", false, 10000],
