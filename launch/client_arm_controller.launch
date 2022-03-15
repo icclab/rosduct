@@ -1,5 +1,5 @@
 <launch>
   <node pkg="rosduct" name="rosduct" type="rosduct_main_bridge.py" output="screen">
-    <rosparam command="load" file="$(find rosduct)/config/arm_rosduct.yaml" />
+    <rosparam command="load" file="$(find rosduct)/config/arm_control.yaml" />
   </node>
 </launch>

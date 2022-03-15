@@ -1,0 +1,10 @@
+<launch>
+  <env name="ROS_PYTHON_LOG_CONFIG_FILE"
+       value="$(find rosduct)/config/python_logging.conf"/>
+  <node pkg="rosduct" name="rosduct_img" type="rosduct_main_bridge_autobahn.py" respawn="true" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/arm_video.yaml" />
+  </node>
+  <node pkg="rosduct" name="rosduct_param_sync" type="rosduct_param_sync.py" output="screen">
+    <rosparam command="load" file="$(find rosduct)/config/arm_video.yaml" />
+  </node>
+</launch>
