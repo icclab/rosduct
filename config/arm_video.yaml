@@ -29,8 +29,8 @@ local_topics: [
               ['/camera/color/image_raw', 'sensor_msgs/Image', 'aaa', false, 1000],
               #['/camera/color/camera_info', 'sensor_msgs/CameraInfo', 'caminfo', false, 200],
               #['/camera/depth/image_rect_raw/compressed', 'sensor_msgs/CompressedImage', 'bbb', false, 1000],
-              ['/tf_static', 'tf2_msgs/TFMessage', '/tf_static', true],
-              #['/tf', 'tf2_msgs/TFMessage'],
+              ['/tf_static', 'tf2_msgs/TFMessage', '/tf_static', false, 100],
+              #              ['/tf', 'tf2_msgs/TFMessage', 'tf', false, 100],
             ]
 # Services running remotely to expose locally
 remote_services: [["/rosapi/topics", "rosapi/Topics"]]
