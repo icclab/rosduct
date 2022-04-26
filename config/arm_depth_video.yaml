@@ -27,7 +27,7 @@ remote_services: [["/rosapi/topics", "rosapi/Topics"]]
 # ["/rosapi/get_param", "rosapi/GetParam"],
 # Services running locally to expose remotely
 local_services: [
-  ["/controller_manager/list_controllers", "controller_manager_msgs/ListControllers"],
+        #  ["/controller_manager/list_controllers", "controller_manager_msgs/ListControllers"],
 #["/map_saver/get_loggers", "roscpp/GetLoggers"]
 ]
 # Parameters to be sync, they will be polled to stay in sync
