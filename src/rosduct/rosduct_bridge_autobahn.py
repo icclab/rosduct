@@ -76,7 +76,7 @@ class ROSductBridge(object):
         parameters = {
             "fragment_timeout": 600,  # seconds
             "delay_between_messages": 0,  # seconds
-            "max_message_size": 4000,  # bytes
+            # "max_message_size": 0,  # bytes
             "unregister_timeout": 30.0,  # seconds
             "bson_only_mode": False
         }
@@ -135,7 +135,7 @@ class ROSductBridge(object):
 
 
     def send_message(self, message):
-        # rospy.logdebug("Outgoing Message is: %s", message)
+        rospy.logdebug("Outgoing Message")
         if type(message) == bson.BSON:
             binary = True
             message = bytes(message)
@@ -145,8 +145,12 @@ class ROSductBridge(object):
         else:
             binary = False
             message = message.encode('utf-8')
-
-        self.websocketclient.sendMessage(message, binary)
+        try:
+            self.websocketclient.sendMessage(message, binary)
+        except:
+            # if this fails we have no working WS connection and we need a new client
+            self.initialize()
+        rospy.logdebug("Message sent")
 
     def initialize(self):
         """

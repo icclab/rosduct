@@ -28,7 +28,7 @@ class ROSBridgeClient():
         global bridge
         self.factory = ROSBridgeWSClientFactory(ws_url)
         self.factory.protocol = ROSBridgeWSClient
-        # self.factory.protocol.log.set_log_level("debug")
+        self.factory.protocol.log.set_log_level("debug")
         bridge = bridge_ref
 
     def stop(self):
@@ -38,7 +38,10 @@ class ROSBridgeClient():
 
     def start(self):
         connectWS(self.factory)
-        reactor.run()
+        try:
+            reactor.run()
+        except Exception as e:
+            print("Exception ", e.__class__, "occurred.")
 
 
 class ROSBridgeWSClient(WebSocketClientProtocol):
@@ -90,10 +93,13 @@ class ROSBridgeWSClientFactory(WebSocketClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         print("Connection failed")
+        if self.sleep_time == 0:
+            self.sleep_time = 1
         self.reconnect()
 
     def clientConnectionLost(self, connector, reason):
         print("Connection lost - reason: {0}".format(reason))
+        self.sleep_time = 0
         self.reconnect()
 
     def reconnect(self):

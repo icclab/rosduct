@@ -1,5 +1,5 @@
 # ROSbridge websocket server info
-rosbridge_ip: rap-2022-ws-0.k8s.init-lab.ch #rosbridge.k8sbeta.init-lab.ch #172.17.0.1
+rosbridge_ip: rap-2022-ws-staff-toff.k8s.init-lab.ch #rosbridge.k8sbeta.init-lab.ch #172.17.0.1
 rosbridge_port: 443 #9090
 use_wss: true
 # Topics being published remotely to expose locally
@@ -15,8 +15,9 @@ remote_topics:
 # Topics being published in the local roscore to expose remotely
 all_local_topics: false
 local_topics: [
-              ['/camera/depth_registered/points', 'sensor_msgs/PointCloud2', "pc", false, 1000],
-              # ['/camera/color/image_raw/compressed', 'sensor_msgs/CompressedImage', "aaa", false, 200],
+              ['/camera/depth_registered/points', 'sensor_msgs/PointCloud2', "pc", false, 5000],
+              # ['/camera/color/image_raw', 'sensor_msgs/Image', 'aaa', false, 1000],
+              #['/camera/color/image_raw/compressed', 'sensor_msgs/CompressedImage', "aaa", false, 1000],
               # ['/camera/color/camera_info', 'sensor_msgs/CameraInfo', "bbb", false, 1000],
               # ['/camera/depth/image_rect_raw/compressed', 'sensor_msgs/CompressedImage', "ccc", false, 1000],
 # ['/tf_static', 'tf2_msgs/TFMessage'],  
@@ -27,9 +28,10 @@ remote_services: [["/rosapi/topics", "rosapi/Topics"]]
 # ["/rosapi/get_param", "rosapi/GetParam"],
 # Services running locally to expose remotely
 local_services: [
-  ["/controller_manager/list_controllers", "controller_manager_msgs/ListControllers"],
+        #  ["/controller_manager/list_controllers", "controller_manager_msgs/ListControllers"],
 #["/map_saver/get_loggers", "roscpp/GetLoggers"]
 ]
 # Parameters to be sync, they will be polled to stay in sync
 parameters: [] #["/summit_xl/robot_description"]
-parameter_polling_hz: 0.03
+parameter_polling_hz: 0.003
+
