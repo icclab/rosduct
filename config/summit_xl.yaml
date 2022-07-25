@@ -1,0 +1,26 @@
+# ROSbridge websocket server info
+rosbridge_ip: rap-2022-ws-staff-toff.k8s.init-lab.ch #rap-2022-ws-8.k8s.init-lab.ch 
+rosbridge_port: 443 #9090
+use_wss: true
+# Topics being published remotely to expose locally
+remote_topics:
+     [
+             ["/summit_xl/move_base_simple/goal", "geometry_msgs/PoseStamped"]
+     ]
+
+# Topics being published in the local roscore to expose remotely
+all_local_topics: false
+local_topics: [
+                # ["/scan", "sensor_msgs/LaserScan"],
+                # ["/odom", "nav_msgs/Odometry"],
+                # ["/tf", "tf/tfMessage"],
+                # ["/joint_states", "sensor_msgs/JointState"]
+              ]
+# Services running remotely to expose locally
+remote_services: [["/rosapi/topics", "rosapi/Topics"]]
+# ["/rosapi/get_param", "rosapi/GetParam"],
+# Services running locally to expose remotely
+local_services: []
+# Parameters to be sync, they will be polled to stay in sync
+parameters: []
+parameter_polling_hz: 0.03
