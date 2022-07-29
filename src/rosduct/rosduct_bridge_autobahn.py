@@ -23,7 +23,7 @@ from rosbridge_library.internal.publishers import manager
 from rosbridge_server.autobahn_websocket import IncomingQueue
 from rosbridge_library.util import json, bson
 
-USE_CBOR=True
+USE_CBOR=False
 
 """
 Server to expose locally and externally
@@ -81,6 +81,8 @@ class ROSductBridge(object):
             "bson_only_mode": False
         }
 
+        USE_CBOR = rospy.get_param('~use_CBOR', False)
+        rospy.loginfo('Using CBOR: %s' % USE_CBOR)
         if USE_CBOR:
             parameters["compression"] = "cbor"
 

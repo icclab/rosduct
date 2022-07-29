@@ -2,6 +2,7 @@
 rosbridge_ip: rap-2022-ws-staff-toff.k8s.init-lab.ch #rap-2022-ws-8.k8s.init-lab.ch 
 rosbridge_port: 443 #9090
 use_wss: true
+use_CBOR: true
 # Topics being published remotely to expose locally
 remote_topics:
      [
@@ -13,7 +14,7 @@ remote_topics:
 all_local_topics: false
 local_topics: [
 #/summit_xl/arm_camera/color/image_raw/compressed:
-#    ["/summit_xl/scan_combined", "sensor_msgs/LaserScan"],
+    ["/summit_xl/scan_combined", "sensor_msgs/LaserScan"],
 #    /summit_xl/move_base/current_goal:
 #    - /summit_xl/move_base/GlobalPlanner/plan:
 #    - /summit_xl/move_base/TebLocalPlannerROS/global_plan:
@@ -23,8 +24,8 @@ local_topics: [
 #    - /summit_xl/move_base/TebLocalPlannerROS/local_plan:
 #    - /summit_xl/joint_states:
     ["/summit_xl/map", "nav_msgs/OccupancyGrid"],
-#    ["/summit_xl/move_base/local_costmap/costmap", "nav_msgs/OccupancyGrid"],
-#    ["/summit_xl/move_base/global_costmap/costmap", "nav_msgs/OccupancyGrid"]               
+    ["/summit_xl/move_base/local_costmap/costmap", "nav_msgs/OccupancyGrid"],
+ #   ["/summit_xl/move_base/global_costmap/costmap", "nav_msgs/OccupancyGrid"]               
  # ["/scan", "sensor_msgs/LaserScan"],
                 # ["/odom", "nav_msgs/Odometry"],
                 # ["/tf", "tf/tfMessage"],
