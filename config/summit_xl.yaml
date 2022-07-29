@@ -5,19 +5,35 @@ use_wss: true
 # Topics being published remotely to expose locally
 remote_topics:
      [
-             ["/summit_xl/move_base_simple/goal", "geometry_msgs/PoseStamped"]
-     ]
+      ["/summit_xl/move_base_simple/goal", "geometry_msgs/PoseStamped"],
+      ["/summit_xl/initialpose", "geometry_msgs/PoseWithCovarianceStamped"]
+    ]
 
 # Topics being published in the local roscore to expose remotely
 all_local_topics: false
 local_topics: [
-                # ["/scan", "sensor_msgs/LaserScan"],
+#/summit_xl/arm_camera/color/image_raw/compressed:
+#    ["/summit_xl/scan_combined", "sensor_msgs/LaserScan"],
+#    /summit_xl/move_base/current_goal:
+#    - /summit_xl/move_base/GlobalPlanner/plan:
+#    - /summit_xl/move_base/TebLocalPlannerROS/global_plan:
+    ["/tf", "tf2_msgs/TFMessage"],
+    ["/tf_static", "tf2_msgs/TFMessage"],
+#    - /running_nodes_robot:
+#    - /summit_xl/move_base/TebLocalPlannerROS/local_plan:
+#    - /summit_xl/joint_states:
+    ["/summit_xl/map", "nav_msgs/OccupancyGrid"],
+#    ["/summit_xl/move_base/local_costmap/costmap", "nav_msgs/OccupancyGrid"],
+#    ["/summit_xl/move_base/global_costmap/costmap", "nav_msgs/OccupancyGrid"]               
+ # ["/scan", "sensor_msgs/LaserScan"],
                 # ["/odom", "nav_msgs/Odometry"],
                 # ["/tf", "tf/tfMessage"],
                 # ["/joint_states", "sensor_msgs/JointState"]
               ]
 # Services running remotely to expose locally
-remote_services: [["/rosapi/topics", "rosapi/Topics"]]
+remote_services: [
+#["/rosapi/topics", "rosapi/Topics"]
+]
 # ["/rosapi/get_param", "rosapi/GetParam"],
 # Services running locally to expose remotely
 local_services: []

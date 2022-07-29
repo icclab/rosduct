@@ -23,7 +23,7 @@ WORKDIR ${workspace}
 # edit bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
-RUN sudo apt update && sudo apt install -y git python3-catkin-tools python3-pip 
+RUN sudo apt update && sudo apt install -y git python3-catkin-tools python3-pip ros-${ROS_DISTRO}-tf2-msgs
 RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && \
     rosdep update && \
     mkdir -p catkin_ws && \ 
